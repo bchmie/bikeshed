@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Settings — Bikeshed{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Settings</h1>
+</div>
+
+<section class="card">
+  <h2>Bikes</h2>
+  <p class="muted">The default bike catches rides with no gear; trainer rides land on the trainer bike.</p>
+  <form method="post" action="/settings/bikes" class="row">
+    <label class="grow">Default bike
+      <select name="default_bike_id">
+        <option value="">—</option>
+        {% for bike in bikes %}
+        <option value="{{ bike.id }}" {% if bike.is_default %}selected{% endif %}>{{ bike.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="grow">Trainer bike
+      <select name="trainer_bike_id">
+        <option value="">—</option>
+        {% for bike in bikes %}
+        <option value="{{ bike.id }}" {% if bike.is_trainer %}selected{% endif %}>{{ bike.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button class="primary" type="submit">Save</button>
+  </form>
+</section>
+
+<section class="card" id="strava">
+  <h2>Strava</h2>
+  {% if strava_account %}
+  <p>Connected as <b>{{ strava_account.athlete_name or strava_account.athlete_id }}</b>.</p>
+  <div class="row">
+    <a class="button" href="/settings/strava/import">Import bikes</a>
+    <form method="post" action="/settings/strava/disconnect"><button class="danger" type="submit">Disconnect</button></form>
+  </div>
+  {% else %}
+  <p class="muted">Not connected. Connect Strava to let rides arrive automatically.</p>
+  <a class="button primary" href="/settings/strava/connect">Connect Strava</a>
+  {% endif %}
+</section>
+
+<section class="card" id="products">
+  <h2>Product catalog</h2>
+  <p class="muted">Sealant intervals are calendar-based and product-dependent. Every interval is yours to edit.</p>
+  <table class="table">
+    <thead><tr><th>Product</th><th>Interval (days)</th><th></th></tr></thead>
+    <tbody>
+    {% for product in products %}
+      <tr>
+        <td>
+          <form method="post" action="/settings/products/{{ product.id }}" class="inline-form" id="product-{{ product.id }}">
+            <input type="text" name="name" value="{{ product.name }}" aria-label="Product name">
+        </td>
+        <td><input type="number" min="1" step="1" name="interval_days" value="{{ product.interval_days }}" aria-label="Interval in days"></td>
+        <td>
+            <button type="submit">Save</button>
+          </form>
+          <form method="post" action="/settings/products/{{ product.id }}/delete" class="inline-form" onsubmit="return confirm('Remove this product?')">
+            <button class="danger" type="submit">Remove</button>
+          </form>
+        </td>
+      </tr>
+    {% else %}
+      <tr><td colspan="3" class="muted">No products yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <h3>Add a product</h3>
+  <form method="post" action="/settings/products" class="inline-form">
+    <label>Name <input type="text" name="name" required placeholder="Muc-Off Sealant"></label>
+    <label>Interval (days) <input type="number" min="1" step="1" name="interval_days" required></label>
+    <button type="submit">Add product</button>
+  </form>
+</section>
+{% endblock %}

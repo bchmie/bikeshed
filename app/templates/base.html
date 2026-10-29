@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Bikeshed{% endblock %}</title>
+  <link rel="stylesheet" href="/static/app.css">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">Bikeshed</a>
+    {% if current_user %}
+    <nav class="mainnav">
+      <a href="/">Dashboard</a>
+      <a href="/bikes">Bikes</a>
+      <a href="/rides">Rides</a>
+      <a href="/maintenance">Maintenance</a>
+      <a href="/settings">Settings</a>
+      {% if current_user.is_admin %}<a href="/admin/users">Admin</a>{% endif %}
+    </nav>
+    <div class="account">
+      <span class="who">{{ current_user.email }}</span>
+      <form method="post" action="/logout"><button class="link" type="submit">Sign out</button></form>
+    </div>
+    {% endif %}
+  </header>
+
+  <main class="page">
+    {% if notice %}<p class="notice" role="status">{{ notice }}</p>{% endif %}
+    {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

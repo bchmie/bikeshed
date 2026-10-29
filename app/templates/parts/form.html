@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}{% if part %}Edit {{ part.name }}{% else %}Add a part{% endif %} — Bikeshed{% endblock %}
+{% block content %}
+<section class="narrow card">
+  <h1>{% if part %}Edit {{ part.name }}{% else %}Add a part{% endif %}</h1>
+  <p class="muted">On {{ bike.name }}</p>
+  <form method="post" action="{% if part %}/parts/{{ part.id }}{% else %}/bikes/{{ bike.id }}/parts{% endif %}" class="form">
+    <input type="hidden" name="flags_present" value="1">
+    {% if not part %}
+    <label>Part type
+      <select name="part_type_key" id="part_type">
+        {% for entry in catalog %}
+        <option value="{{ entry.key }}"
+          data-wear-unit="{{ entry.default_wear_unit }}"
+          data-threshold="{{ entry.default_threshold|numinput }}"
+          data-measurement="{{ entry.default_measurement_threshold|numinput }}"
+          data-trainer="{{ '1' if entry.default_wears_on_trainer else '0' }}"
+          data-wet="{{ '1' if entry.default_wears_when_wet else '0' }}"
+          data-name="{{ entry.name }}"
+          {% if values.part_type_key == entry.key %}selected{% endif %}>{{ entry.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    {% else %}
+    <p class="muted">Type: {{ part.part_type_key }}</p>
+    {% endif %}
+    <label>Name <input type="text" name="name" value="{{ values.name or '' }}" placeholder="Chain #3"></label>
+    <div class="row">
+      <label class="grow">Wear unit
+        <select name="wear_unit">
+          {% for unit in wear_units %}
+          <option value="{{ unit }}" {% if values.wear_unit == unit %}selected{% endif %}>{{ unit }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="grow">Service interval
+        <input type="number" step="any" min="0" name="threshold" value="{{ values.threshold|numinput }}">
+      </label>
+    </div>
+    <label>Measurement threshold (% stretch, optional)
+      <input type="number" step="any" min="0" name="measurement_threshold" value="{{ values.measurement_threshold|numinput }}">
+    </label>
+    <label>Km already on this part
+      <input type="number" step="any" min="0" name="initial_km" value="{{ values.initial_km|numinput }}">
+    </label>
+    <label>Position (for tires and pads)
+      <select name="location">
+        {% for value, label in locations %}
+        <option value="{{ value }}" {% if values.location == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    {% if not part or values.part_type_key == "quicklink" %}
+    <label>Attached chain
+      <select name="attached_chain_id">
+        <option value="">—</option>
+        {% for chain in chains %}
+        <option value="{{ chain.id }}" {% if values.attached_chain_id == chain.id %}selected{% endif %}>{{ chain.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    {% endif %}
+    <label class="checkline"><input type="checkbox" name="wears_on_trainer" {% if values.wears_on_trainer %}checked{% endif %}> Wears on trainer rides</label>
+    <label class="checkline"><input type="checkbox" name="wears_when_wet" {% if values.wears_when_wet %}checked{% endif %}> Service clock invalidated by a wet ride</label>
+    <button class="primary" type="submit">{% if part %}Save part{% else %}Add part{% endif %}</button>
+  </form>
+</section>
+<script>
+  (function () {
+    var select = document.getElementById('part_type');
+    if (!select) return;
+    var fields = {
+      wear_unit: document.querySelector('[name=wear_unit]'),
+      threshold: document.querySelector('[name=threshold]'),
+      measurement_threshold: document.querySelector('[name=measurement_threshold]'),
+      name: document.querySelector('[name=name]'),
+      wears_on_trainer: document.querySelector('[name=wears_on_trainer]'),
+      wears_when_wet: document.querySelector('[name=wears_when_wet]')
+    };
+    select.addEventListener('change', function () {
+      var option = select.options[select.selectedIndex];
+      fields.wear_unit.value = option.dataset.wearUnit;
+      fields.threshold.value = option.dataset.threshold;
+      fields.measurement_threshold.value = option.dataset.measurement;
+      fields.wears_on_trainer.checked = option.dataset.trainer === '1';
+      fields.wears_when_wet.checked = option.dataset.wet === '1';
+      if (!fields.name.value) fields.name.value = option.dataset.name;
+    });
+  })();
+</script>
+{% endblock %}

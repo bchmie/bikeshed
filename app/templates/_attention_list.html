@@ -1,0 +1,23 @@
+{% if attention %}
+<ul class="list attention-list">
+  {% for status in attention %}
+  <li class="item {{ status.level }}">
+    <div class="item-top">
+      <span class="name"><span class="number">{{ loop.index }}</span>{{ status.name }}</span>
+      <span class="pill {{ status.level }}">{{ "due" if status.level == "due" else "due soon" }}</span>
+    </div>
+    <div class="reason {{ status.level }}">{{ status.reason }}</div>
+    <div class="meta">
+      {% if names.get(status.bike_id) %}{{ names.get(status.bike_id) }}{% endif %}
+      {% if status.total_km %}· {{ status.total_km|km }} lifetime{% endif %}
+      {% if status.reading is not none and status.measurement_threshold is not none %}· last reading {{ status.reading|numinput }}%{% endif %}
+    </div>
+    {% with part_id=status.part_id, part_type=status.part_type, return_to=request.url.path %}
+      {% include "_quick_actions.html" %}
+    {% endwith %}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="empty">Nothing is due. The ledger is up to date.</p>
+{% endif %}

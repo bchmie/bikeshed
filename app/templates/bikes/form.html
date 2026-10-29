@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Add a bike — Bikeshed{% endblock %}
+{% block content %}
+<section class="narrow card">
+  <h1>Add a bike</h1>
+  <form method="post" action="/bikes" class="form">
+    <label>Name <input type="text" name="name" value="{{ values.name if values else '' }}" required placeholder="Road bike"></label>
+    <label>Brand <input type="text" name="brand" value="{{ values.brand if values else '' }}"></label>
+    <label>Model <input type="text" name="model" value="{{ values.model if values else '' }}"></label>
+    <label>Starting odometer (km) <input type="number" step="any" min="0" name="starting_km" value="{{ values.starting_km if values else '0' }}"></label>
+    <label class="checkline"><input type="checkbox" name="is_trainer"> This bike lives on the trainer</label>
+    <button class="primary" type="submit">Add bike</button>
+  </form>
+</section>
+{% endblock %}

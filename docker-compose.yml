@@ -1,0 +1,18 @@
+services:
+  bikeshed:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Your public URL, used as the Strava OAuth redirect base.
+      BIKESHED_BASE_URL: "https://bikeshed.example.com"
+      PORT: "8000"
+      STRAVA_CLIENT_ID: ""
+      STRAVA_CLIENT_SECRET: ""
+      STRAVA_VERIFY_TOKEN: ""
+      BIKESHED_RECONCILE_TOKEN: ""
+    volumes:
+      # The SQLite file lives here, so it survives container restarts.
+      # :Z relabels for SELinux hosts (Podman/Fedora); harmless on Docker.
+      - ./data:/data:Z

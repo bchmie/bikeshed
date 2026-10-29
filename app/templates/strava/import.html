@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Import Strava bikes — Bikeshed{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Import your Strava bikes</h1>
+    <p class="muted">Strava's lifetime km only covers what Strava attributed to that bike. It is a starting point — edit it.</p>
+  </div>
+  <a class="button" href="/bikes/new">Create a bike manually</a>
+</div>
+<ul class="list">
+  {% for bike in bikes %}
+  <li class="item">
+    {% if bike.gear_id in imported %}
+    <div class="item-top">
+      <span class="name">{{ bike.name }}</span>
+      <span class="pill ok">imported</span>
+    </div>
+    <div class="meta">{{ bike.brand }} {{ bike.model }}</div>
+    {% else %}
+    <form method="post" action="/settings/strava/import" class="form">
+      <input type="hidden" name="gear_id" value="{{ bike.gear_id }}">
+      <div class="item-top"><span class="name">{{ bike.name }}</span></div>
+      <div class="row">
+        <label class="grow">Name <input type="text" name="name" value="{{ bike.name }}"></label>
+        <label class="grow">Brand <input type="text" name="brand" value="{{ bike.brand }}"></label>
+        <label class="grow">Model <input type="text" name="model" value="{{ bike.model }}"></label>
+        <label class="grow">Starting odometer (km)
+          <input type="number" step="any" min="0" name="starting_km" value="{{ bike.km }}">
+        </label>
+      </div>
+      <button class="primary" type="submit">Import {{ bike.name }}</button>
+    </form>
+    {% endif %}
+  </li>
+  {% else %}
+  <li class="empty">Strava has no bikes on this account.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

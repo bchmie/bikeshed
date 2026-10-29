@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Log a ride — Bikeshed{% endblock %}
+{% block content %}
+<section class="narrow card">
+  <h1>Log a ride</h1>
+  <p class="muted">Manual entry is the fallback for rides the app can't see.</p>
+  <form method="post" action="/rides" class="form">
+    <label>Date
+      <input type="date" name="occurred_on" value="{{ values.occurred_on if values else today.isoformat() }}" required>
+    </label>
+    <label>Distance (km)
+      <input type="number" step="any" min="0.1" name="distance_km" value="{{ values.distance_km if values else '' }}" required>
+    </label>
+    <label>Bike
+      <select name="bike_id">
+        {% for bike in bikes %}
+        <option value="{{ bike.id }}" {% if (values and values.bike_id == bike.id|string) or (not values and bike.id == default_bike_id) %}selected{% endif %}>{{ bike.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label class="checkline"><input type="checkbox" name="trainer" {% if values and values.trainer %}checked{% endif %}> Trainer ride</label>
+    <label class="checkline"><input type="checkbox" name="wet" {% if values and values.wet %}checked{% endif %}> Wet ride</label>
+    <button class="primary" type="submit">Log ride</button>
+  </form>
+</section>
+{% endblock %}

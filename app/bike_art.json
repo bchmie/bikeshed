@@ -1,0 +1,57 @@
+{
+  "id": "path1-road",
+  "viewBox": "2190.0505 301.81355 1685.6985 1018.7031",
+  "offset": [2190.0505, 301.81355],
+  "mode": "overlay",
+  "regions": {
+    "rear-tire": {
+      "pin": [190, 442],
+      "shapes": [
+        { "kind": "ring", "cx": 325, "cy": 674, "r": 310, "w": 40 }
+      ]
+    },
+    "front-tire": {
+      "pin": [1480, 442],
+      "shapes": [
+        { "kind": "ring", "cx": 1344, "cy": 668, "r": 310, "w": 40 }
+      ]
+    },
+    "chain": {
+      "pin": [735, 596],
+      "shapes": [
+        { "kind": "line", "points": [[390, 621], [728, 653]], "w": 22 },
+        { "kind": "line", "points": [[728, 846], [390, 838]], "w": 22 }
+      ]
+    },
+    "cassette": {
+      "pin": [434, 574],
+      "shapes": [
+        { "kind": "ring", "cx": 392, "cy": 640, "r": 57, "w": 42 }
+      ]
+    },
+    "chainring": {
+      "pin": [806, 802],
+      "shapes": [
+        { "kind": "ring", "cx": 735, "cy": 750, "r": 78, "w": 32 }
+      ]
+    },
+    "pads-front": {
+      "pin": [1200, 548],
+      "shapes": [
+        { "kind": "dot", "cx": 1245, "cy": 605, "r": 43 }
+      ]
+    },
+    "pads-rear": {
+      "pin": [232, 574],
+      "shapes": [
+        { "kind": "dot", "cx": 280, "cy": 625, "r": 40 }
+      ]
+    },
+    "quicklink": {
+      "pin": [548, 596],
+      "shapes": [
+        { "kind": "dot", "cx": 548, "cy": 637, "r": 26 }
+      ]
+    }
+  }
+}

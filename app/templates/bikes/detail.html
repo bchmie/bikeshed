@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}{{ bike.name }} — Bikeshed{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ bike.name }}</h1>
+    <p class="muted">{{ bike.brand }} {{ bike.model }}
+      {% if bike.starting_km %}· starting odometer {{ bike.starting_km|km }}{% endif %}
+      {% if bike.strava_gear_id %}· imported from Strava{% endif %}
+    </p>
+  </div>
+  <a class="button primary" href="/bikes/{{ bike.id }}/parts/new">Add a part</a>
+</div>
+
+<section class="card">
+  <h3>Swap</h3>
+  <div class="row">
+    <form method="post" action="/bikes/{{ bike.id }}/swap-chain" class="inline-form">
+      <label>New chain name <input type="text" name="name" placeholder="auto"></label>
+      <button type="submit">Swap chain</button>
+    </form>
+    <form method="post" action="/bikes/{{ bike.id }}/swap-cassette" class="inline-form">
+      <label>New cassette name <input type="text" name="name" placeholder="auto"></label>
+      <button type="submit">Swap cassette</button>
+    </form>
+  </div>
+</section>
+
+<ul class="list">
+  {% for row in parts %}
+  {% set part = row.part %}
+  {% set status = row.status %}
+  <li class="item {% if status and status.level in ('due', 'warn') %}{{ status.level }}{% endif %}">
+    <div class="item-top">
+      <span class="name"><a href="/parts/{{ part.id }}">{{ part.name }}</a></span>
+      <span class="pill {% if status %}{{ status.level }}{% endif %}">{{ status.level if status else part.wear_unit }}</span>
+    </div>
+    <div class="reason {% if status %}{{ status.level }}{% endif %}">{{ status.reason if status else "" }}</div>
+    <div class="meta">
+      Odometer <b>{{ status.total_km|km if status else "—" }}</b>
+      · service every {{ part|wear_label }}
+      {% if part.measurement_threshold is not none %}· replace at ≥{{ part.measurement_threshold|numinput }}%{% endif %}
+      {% if part.wears_on_trainer %}· wears on trainer{% endif %}
+      {% if part.wears_when_wet %}· wears when wet{% endif %}
+    </div>
+  </li>
+  {% else %}
+  <li class="empty">No parts on this bike yet.</li>
+  {% endfor %}
+</ul>
+
+{% if retired %}
+<section class="card">
+  <h3>Retired parts from this bike</h3>
+  <ul class="list">
+    {% for row in retired %}
+    <li class="item">
+      <div class="item-top">
+        <span class="name"><a href="/parts/{{ row.part.id }}">{{ row.part.name }}</a></span>
+        <span class="pill retired">retired</span>
+      </div>
+      <div class="reason">{{ row.status.reason if row.status else "" }}</div>
+      <form method="post" action="/parts/{{ row.part.id }}/install" class="inline-form">
+        <input type="hidden" name="bike_id" value="{{ bike.id }}">
+        <input type="hidden" name="return_to" value="/bikes/{{ bike.id }}">
+        <button type="submit">Reinstall here</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<section class="card">
+  <h3>History</h3>
+  {% if events %}
+  <table class="table">
+    <thead><tr><th>Date</th><th>Part</th><th>Event</th><th>Detail</th></tr></thead>
+    <tbody>
+    {% for event, part in events %}
+      <tr>
+        <td>{{ event.occurred_on }}</td>
+        <td><a href="/parts/{{ part.id }}">{{ part.name }}</a></td>
+        <td>{{ kind_label(event.kind) }}</td>
+        <td class="muted">
+          {% if event.product_name %}{{ event.product_name }}{% if event.amount %} · {{ event.amount }}{% endif %}{% endif %}
+          {% if event.reading is not none %}reading {{ event.reading|numinput }}%{% endif %}
+          {% if event.notes %}{{ event.notes }}{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No maintenance logged on this bike yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

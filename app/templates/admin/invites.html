@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Admin — invites{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Invite codes</h1>
+  <a class="button" href="/admin/users">Users</a>
+</div>
+<form method="post" action="/admin/invites" class="inline-form">
+  <button class="primary" type="submit">Generate invite code</button>
+</form>
+<table class="table">
+  <thead><tr><th>Code</th><th>Created</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for invite in invites %}
+    <tr>
+      <td><code>{{ invite.code }}</code></td>
+      <td>{{ invite.created_at.strftime("%Y-%m-%d") }}</td>
+      <td>{% if invite.used %}<span class="pill">used</span>{% else %}<span class="pill ok">open</span>{% endif %}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="3" class="muted">No invite codes yet.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

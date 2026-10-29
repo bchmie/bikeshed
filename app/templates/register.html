@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Register — Bikeshed{% endblock %}
+{% block content %}
+<section class="narrow card">
+  <h1>{% if first_user %}Set up this instance{% else %}Register{% endif %}</h1>
+  {% if first_user %}
+  <p class="muted">This is a fresh deployment. The first account becomes the admin.</p>
+  {% else %}
+  <p class="muted">Registration is invite-only. Ask the admin for an invite code.</p>
+  {% endif %}
+  <form method="post" action="/register" class="form">
+    <label>Email <input type="email" name="email" value="{{ email or '' }}" required autocomplete="email"></label>
+    <label>Password <input type="password" name="password" required minlength="8" autocomplete="new-password"></label>
+    {% if not first_user %}
+    <label>Invite code <input type="text" name="invite" value="{{ invite or '' }}" required></label>
+    {% endif %}
+    <button class="primary" type="submit">{% if first_user %}Create admin account{% else %}Create account{% endif %}</button>
+  </form>
+  <p class="muted">Already registered? <a href="/login">Sign in</a></p>
+</section>
+{% endblock %}

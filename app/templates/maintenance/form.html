@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Edit maintenance — Bikeshed{% endblock %}
+{% block content %}
+<section class="narrow card">
+  <h1>Edit {{ kind_label(event.kind) }}</h1>
+  <p class="muted">{{ part.name if part else "Part" }}</p>
+  <form method="post" action="/maintenance/{{ event.id }}/edit" class="form">
+    <label>Date <input type="date" name="occurred_on" value="{{ event.occurred_on.isoformat() }}" required></label>
+    {% if event.kind in ("sealant", "service", "reading", "wax") %}
+    <label>Reading (% stretch, optional) <input type="number" step="any" min="0" name="reading" value="{{ event.reading|numinput }}"></label>
+    {% endif %}
+    {% if event.kind == "sealant" %}
+    <label>Product
+      <select name="product_id">
+        {% for product in products %}
+        <option value="{{ product.id }}" {% if event.product_id == product.id %}selected{% endif %}>{{ product.name }} ({{ product.interval_days }} days)</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Amount <input type="text" name="amount" value="{{ event.amount }}" placeholder="60 ml"></label>
+    {% endif %}
+    {% if event.kind == "uses_adjust" %}
+    <label>Uses adjustment <input type="number" step="1" name="delta" value="{{ event.uses_delta }}"></label>
+    {% endif %}
+    <label>Notes <textarea name="notes" rows="3">{{ event.notes }}</textarea></label>
+    <button class="primary" type="submit">Save event</button>
+  </form>
+  <form method="post" action="/maintenance/{{ event.id }}/delete" onsubmit="return confirm('Delete this event?')">
+    <button class="danger" type="submit">Delete event</button>
+  </form>
+</section>
+{% endblock %}

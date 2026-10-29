@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Admin — users{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Users</h1>
+  <a class="button" href="/admin/invites">Invite codes</a>
+</div>
+<table class="table">
+  <thead><tr><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for user in users %}
+    <tr>
+      <td>{{ user.email }}</td>
+      <td>{{ user.role }}</td>
+      <td>{% if user.disabled %}<span class="pill due">disabled</span>{% else %}<span class="pill ok">active</span>{% endif %}</td>
+      <td>
+        {% if user.id != admin.id %}
+          {% if user.disabled %}
+          <form method="post" action="/admin/users/{{ user.id }}/enable"><button type="submit">Enable</button></form>
+          {% else %}
+          <form method="post" action="/admin/users/{{ user.id }}/disable"><button type="submit">Disable</button></form>
+          {% endif %}
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

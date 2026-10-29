@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Bikeshed{% endblock %}
+{% block head %}<meta name="dashboard" content="prototype-shape">{% endblock %}
+{% block content %}
+<div class="dashboard">
+  <aside class="attention-panel">
+    <div class="panel-head">
+      <h2>Needs attention</h2>
+      <a class="small" href="/needs-attention">All {{ attention|length }}</a>
+    </div>
+    {% include "_attention_list.html" %}
+  </aside>
+
+  <section class="stage">
+    <div class="stage-head">
+      <div class="bike-tabs">
+        {% for bike in bikes %}
+        <a class="bike-tab {% if selected_bike and bike.id == selected_bike.id %}active{% endif %}"
+           href="/?bike={{ bike.id }}#stage">{{ bike.name }}
+          {% if attention_counts[bike.id] %}<span class="pin-count">{{ attention_counts[bike.id] }}</span>{% endif %}
+        </a>
+        {% endfor %}
+      </div>
+      <a class="small" href="{{ '/bikes/' ~ selected_bike.id if selected_bike else '/bikes/new' }}">Bike page</a>
+    </div>
+
+    {% if selected_bike %}
+    <div class="bike-canvas" id="stage">
+      <img class="bike-ink" src="/static/bike-art.svg" alt="{{ selected_bike.name }} drawing">
+      <svg class="bike-overlay" viewBox="{{ drawing_view_box }}" aria-label="Parts needing attention">
+        {% for zone in stage.zones %}
+          {% for shape in zone.shapes %}
+            {% if shape.kind == "ring" %}
+            <circle class="zone {{ zone.level }}" cx="{{ shape.cx }}" cy="{{ shape.cy }}" r="{{ shape.r }}"
+                    fill="none" stroke-width="{{ shape.w }}" />
+            {% elif shape.kind == "dot" %}
+            <circle class="zone {{ zone.level }}" cx="{{ shape.cx }}" cy="{{ shape.cy }}" r="{{ shape.r }}" />
+            {% elif shape.kind == "line" %}
+            <polyline class="zone {{ zone.level }}" points="{% for point in shape.points %}{{ point[0] }},{{ point[1] }} {% endfor %}"
+                      fill="none" stroke-width="{{ shape.w }}" stroke-linecap="round" />
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+        {% for pin in stage.pins %}
+        <a href="/parts/{{ pin.part.id }}" class="pin-link">
+          <g class="pin {{ pin.status.level }}">
+            <title>{{ pin.number }}. {{ pin.part.name }} — {{ pin.status.reason }}</title>
+            <circle class="pin-halo" cx="{{ pin.x }}" cy="{{ pin.y }}" r="56" />
+            <circle class="pin-dot" cx="{{ pin.x }}" cy="{{ pin.y }}" r="42" />
+            <text x="{{ pin.x }}" y="{{ pin.y + 16 }}" text-anchor="middle">{{ pin.number }}</text>
+          </g>
+        </a>
+        {% endfor %}
+      </svg>
+      <div class="stage-caption">
+        <b>{{ selected_bike.name }}</b>
+        <span class="muted">{{ part_counts[selected_bike.id] }} parts in service</span>
+      </div>
+      <div class="stage-actions">
+        {% if stage.can_swap_chain %}
+        <form method="post" action="/bikes/{{ selected_bike.id }}/swap-chain" class="inline-form">
+          <button type="submit">Swap chain</button>
+        </form>
+        {% endif %}
+        {% if stage.can_swap_cassette %}
+        <form method="post" action="/bikes/{{ selected_bike.id }}/swap-cassette" class="inline-form">
+          <button type="submit">Swap cassette</button>
+        </form>
+        {% endif %}
+        <a class="small" href="/rides/new">Log a ride</a>
+      </div>
+    </div>
+    {% else %}
+    <div class="card empty-stage">
+      <p class="empty">No bike on the stand yet.</p>
+      <a class="button primary" href="/bikes/new">Add a bike</a>
+    </div>
+    {% endif %}
+  </section>
+
+  <aside class="side-panel">
+    <div class="tabbar">
+      <input type="radio" name="panel" id="tab-rides" checked>
+      <label for="tab-rides">Rides <span class="count">{{ recent_rides|length }}</span></label>
+      <input type="radio" name="panel" id="tab-maintenance">
+      <label for="tab-maintenance">Maintenance <span class="count">{{ events|length }}</span></label>
+
+      <div class="tab-content rides-panel">
+        {% for ride in recent_rides %}
+        {% set detail = ride_details.get(ride.id) %}
+        <details class="ride-row">
+          <summary>
+            <span class="when">{{ ride.occurred_on.strftime("%d %b") }}</span>
+            <span class="what">{{ ride.distance_km|num }} km</span>
+            <span class="grow"></span>
+            {% if ride.trainer %}<span class="badge trainer">trainer</span>{% endif %}
+            {% if ride.wet %}<span class="badge wet">wet</span>{% endif %}
+            {% if ride.needs_confirmation %}<span class="badge guess">confirm bike</span>{% endif %}
+            <span class="bike-name">{{ names.get(ride.bike_id, "no bike") }}</span>
+          </summary>
+          <div class="ride-detail">
+            <ul class="wear-lines">
+              {% for line in detail.lines if detail %}
+                {% if line.state == "worn" %}
+                <li><b>{{ line.part.name }}</b> <span class="plus">+{{ line.km|num }} km</span></li>
+                {% elif line.state == "skipped" %}
+                <li class="muted"><b>{{ line.part.name }}</b> — {{ line.note }}</li>
+                {% else %}
+                <li class="wet-line"><b>{{ line.part.name }}</b> — {{ line.note }}</li>
+                {% endif %}
+              {% else %}
+              <li class="muted">No parts were installed on this bike yet.</li>
+              {% endfor %}
+            </ul>
+            {% for cross in detail.crossed if detail %}
+            <p class="crossed">This ride crossed {{ cross.part.name }}'s limit — {{ cross.reason }}</p>
+            {% endfor %}
+            {% if ride.needs_confirmation %}
+            <p class="guess-note">No Strava bike was set, so this ride landed on the default bike. Confirm it below.</p>
+            {% endif %}
+            <div class="ride-controls">
+              <form method="post" action="/rides/{{ ride.id }}/wet" class="inline-form">
+                <input type="hidden" name="return_to" value="/">
+                <button type="submit">{{ "Mark dry" if ride.wet else "Mark wet" }}</button>
+              </form>
+              <form method="post" action="/rides/{{ ride.id }}/bike" class="inline-form">
+                <input type="hidden" name="return_to" value="/">
+                <select name="bike_id" aria-label="Bike">
+                  {% for bike in bikes %}
+                  <option value="{{ bike.id }}" {% if ride.bike_id == bike.id %}selected{% endif %}>{{ bike.name }}</option>
+                  {% endfor %}
+                </select>
+                <button type="submit">Move</button>
+              </form>
+            </div>
+          </div>
+        </details>
+        {% else %}
+        <p class="empty">No rides yet. <a href="/rides/new">Log one</a> or connect Strava.</p>
+        {% endfor %}
+      </div>
+
+      <div class="tab-content maintenance-panel">
+        {% for event, part in events %}
+        <div class="logline">
+          <span class="when">{{ event.occurred_on.strftime("%d %b") }}</span>
+          <b>{{ kind_label(event.kind) }}</b> · {{ part.name }}
+          {% if event.product_name %}· {{ event.product_name }}{% endif %}
+          {% if event.amount %}· {{ event.amount }}{% endif %}
+          {% if event.reading is not none %}· {{ event.reading|numinput }}%{% endif %}
+          {% if event.kind == "uses_adjust" %}· {{ "%+d"|format(event.uses_delta) }} uses{% endif %}
+          {% if event.notes %}<span class="muted">— {{ event.notes }}</span>{% endif %}
+        </div>
+        {% else %}
+        <p class="empty">No maintenance logged yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock %}

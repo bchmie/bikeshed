@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}{{ part.name }} — Bikeshed{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>{{ part.name }}</h1>
+    <p class="muted">
+      {% if bike %}<a href="/bikes/{{ bike.id }}">{{ bike.name }}</a> · {% endif %}
+      service every {{ part|wear_label }}
+    </p>
+  </div>
+  <div class="row">
+    <a class="button" href="/parts/{{ part.id }}/edit">Edit part</a>
+    {% if installation %}
+    <form method="post" action="/parts/{{ part.id }}/uninstall" class="inline-form">
+      <input type="hidden" name="return_to" value="/parts/{{ part.id }}">
+      <button class="danger" type="submit">Remove from bike</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<section class="card">
+  <div class="item-top">
+    <span class="pill {% if status %}{{ status.level }}{% endif %}">{{ status.level if status else "—" }}</span>
+    <span class="meta">Odometer <b>{{ status.total_km|km if status else "—" }}</b></span>
+  </div>
+  <p class="reason {% if status %}{{ status.level }}{% endif %}">{{ status.reason if status else "" }}</p>
+  {% with part_id=part.id, part_type=part.part_type_key, return_to="/parts/" ~ part.id %}
+    {% include "_quick_actions.html" %}
+  {% endwith %}
+  <p class="meta">
+    Wear unit: {{ part.wear_unit }}
+    {% if part.measurement_threshold is not none %} · replace at ≥{{ part.measurement_threshold|numinput }}% stretch{% endif %}
+    {% if status and status.reading is not none %} · last reading {{ status.reading|numinput }}%{% endif %}
+    {% if part.wears_on_trainer %} · wears on trainer{% endif %}
+    {% if part.wears_when_wet %} · wears when wet{% endif %}
+  </p>
+</section>
+
+<section class="card">
+  <h3>History</h3>
+  {% if events %}
+  <table class="table">
+    <thead><tr><th>Date</th><th>Event</th><th>Detail</th><th></th></tr></thead>
+    <tbody>
+    {% for event in events %}
+      <tr>
+        <td>{{ event.occurred_on }}</td>
+        <td>{{ kind_label(event.kind) }}</td>
+        <td class="muted">
+          {% if event.product_name %}{{ event.product_name }}{% if event.amount %} · {{ event.amount }}{% endif %}{% endif %}
+          {% if event.reading is not none %}reading {{ event.reading|numinput }}%{% endif %}
+          {% if event.kind == "uses_adjust" %}{{ "%+d"|format(event.uses_delta) }} uses{% endif %}
+          {% if event.notes %}{{ event.notes }}{% endif %}
+        </td>
+        <td><a class="small" href="/maintenance/{{ event.id }}/edit">Edit</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No maintenance logged for this part yet.</p>
+  {% endif %}
+</section>
+
+{% if not installation %}
+<section class="card">
+  <h3>Reinstall</h3>
+  <form method="post" action="/parts/{{ part.id }}/install" class="inline-form">
+    <input type="hidden" name="return_to" value="/parts/{{ part.id }}">
+    <label>Bike
+      <select name="bike_id">
+        {% for option in bikes %}
+        <option value="{{ option.id }}">{{ option.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Km already on it <input type="number" step="any" min="0" name="initial_km" value="0"></label>
+    <button class="primary" type="submit">Install part</button>
+  </form>
+</section>
+{% endif %}
+
+{% if installations|length > 1 %}
+<section class="card">
+  <h3>Lifecycle</h3>
+  <ul class="list">
+    {% for install in installations %}
+    <li class="item">Installed {{ install.installed_on }}{% if install.removed_on %} · removed {{ install.removed_on }}{% else %} · <span class="pill ok">current</span>{% endif %}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

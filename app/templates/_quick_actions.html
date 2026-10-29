@@ -1,0 +1,46 @@
+{% set kind_actions = {"chain": "wax", "quicklink": "uses_adjust", "sealant": "sealant"} %}
+{% set action = kind_actions.get(part_type) %}
+{% if action %}
+<div class="quick">
+  <form method="post" action="/parts/{{ part_id }}/quick/{{ action }}" class="inline-form">
+    <input type="hidden" name="return_to" value="{{ return_to }}">
+    {% if action == "sealant" %}
+    <select name="product_id" aria-label="Sealant product">
+      {% for product in products %}
+      <option value="{{ product.id }}">{{ product.name }} ({{ product.interval_days }} days)</option>
+      {% endfor %}
+    </select>
+    {% endif %}
+    <button class="primary" type="submit">
+      {% if action == "wax" %}Re-wax{% elif action == "uses_adjust" %}Used once (+1){% else %}Top up sealant{% endif %}
+    </button>
+  </form>
+  <details class="expand">
+    <summary>More detail</summary>
+    <form method="post" action="/parts/{{ part_id }}/quick/{{ action }}" class="form">
+      <input type="hidden" name="return_to" value="{{ return_to }}">
+      <div class="row">
+        <label class="grow">Date <input type="date" name="occurred_on" value="{{ today.isoformat() }}"></label>
+        {% if action in ("wax", "sealant") %}
+        <label class="grow">Reading (% stretch) <input type="number" step="any" min="0" name="reading"></label>
+        {% endif %}
+        {% if action == "uses_adjust" %}
+        <label class="grow">Adjust by <input type="number" step="1" name="delta" value="1"></label>
+        {% endif %}
+        {% if action == "sealant" %}
+        <label class="grow">Amount <input type="text" name="amount" placeholder="60 ml"></label>
+        <label class="grow">Product
+          <select name="product_id">
+            {% for product in products %}
+            <option value="{{ product.id }}">{{ product.name }} ({{ product.interval_days }} days)</option>
+            {% endfor %}
+          </select>
+        </label>
+        {% endif %}
+      </div>
+      <label>Notes <textarea name="notes" rows="2"></textarea></label>
+      <button type="submit">Log {{ kind_actions[part_type]|replace("_", " ") }}</button>
+    </form>
+  </details>
+</div>
+{% endif %}

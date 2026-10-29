@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Bikes — Bikeshed{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Bikes</h1>
+  <a class="button primary" href="/bikes/new">Add a bike</a>
+</div>
+{% if bikes %}
+<ul class="list">
+  {% for bike in bikes %}
+  <li class="item">
+    <div class="item-top">
+      <span class="name"><a href="/bikes/{{ bike.id }}">{{ bike.name }}</a></span>
+      <span class="meta">{{ part_counts[bike.id] }} part{{ "" if part_counts[bike.id] == 1 else "s" }}</span>
+    </div>
+    <div class="meta">
+      {{ bike.brand }} {{ bike.model }}
+      {% if bike.is_default %}<span class="badge">default</span>{% endif %}
+      {% if bike.is_trainer %}<span class="badge trainer">trainer</span>{% endif %}
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="empty">No bikes yet. Add one to start the ledger.</p>
+{% endif %}
+{% endblock %}

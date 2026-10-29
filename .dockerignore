@@ -1,0 +1,12 @@
+.git
+.gitignore
+.venv
+.pytest_cache
+__pycache__
+*.pyc
+data
+.scratch
+tests
+path1.svg
+docs
+.idea
